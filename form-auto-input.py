@@ -8,14 +8,16 @@ from dotenv import load_dotenv
 load_dotenv("user-profile.env")
 
 driver = webdriver.Chrome()
-driver.get(os.getenv("URL"))
 
 with open("answers.txt", encoding="utf-8") as f:
     answers = f.readlines()
 answers = [answer.strip() for answer in answers]
+url = answers.pop(0)
 answers = [" ".join(answer.split(" ")[1:]) for answer in answers if answer.startswith("(")]
 answers.insert(0, os.getenv("ID"))
 answers.insert(1, os.getenv("NAME"))
+
+driver.get(url)
 
 time.sleep(1)
 
