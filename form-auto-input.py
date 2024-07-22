@@ -1,6 +1,10 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import time
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import os
 import json
 import signal
@@ -18,14 +22,14 @@ answers = [" ".join(answer.split(" ")[1:]) for answer in answers if answer.start
 answers.insert(0, os.getenv("ID"))
 answers.insert(1, os.getenv("NAME"))
 
+wait = WebDriverWait(driver, 10)
+
 try:
     driver.get(url)
 
-    time.sleep(1)
-
 
     while True:
-        form = driver.find_element(By.TAG_NAME, "form")
+        form = wait.until(EC.presence_of_element_located((By.TAG_NAME, "form")))
         entries = form.find_elements(By.CSS_SELECTOR, "input[class=\"whsOnd zHQkBf\"], div[class=\"Y6Myld\"] > div[role=\"list\"]")
         if len(entries) > len(answers):
             print("not enough answers")
@@ -37,7 +41,8 @@ try:
                 for choice in choices:
                     checkboxes[choice-1].click()
             else:
-                entry.send_keys(answers.pop(0))
+                element = wait.until(EC.element_to_be_clickable(entry))
+                element.send_keys(answers.pop(0))
 
         try:
             next = form.find_element(By.CSS_SELECTOR, "div[jsname=\"OCpkoe\"]")
@@ -46,6 +51,5 @@ try:
             break
 
         next.click()
-        time.sleep(1)
 finally:
     os.kill(driver.service.process.pid, signal.SIGTERM)
