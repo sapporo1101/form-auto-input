@@ -5,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import StaleElementReferenceException
 import os
 import json
 import signal
@@ -28,8 +29,11 @@ try:
     driver.get(url)
 
     while True:
-        form = wait.until(EC.presence_of_element_located((By.TAG_NAME, "form")))
-        entries = form.find_elements(By.CSS_SELECTOR, "input[class=\"whsOnd zHQkBf\"], div[class=\"Y6Myld\"] > div[role=\"list\"], div[role=\"listbox\"]")
+        try: 
+            form = wait.until(EC.presence_of_element_located((By.TAG_NAME, "form")))
+            entries = form.find_elements(By.CSS_SELECTOR, "input[class=\"whsOnd zHQkBf\"], div[class=\"Y6Myld\"] > div[role=\"list\"], div[role=\"listbox\"]")
+        except StaleElementReferenceException:
+            continue
         if len(entries) > len(answers):
             print("not enough answers")
             break
