@@ -31,7 +31,7 @@ try:
     while True:
         try: 
             form = wait.until(EC.presence_of_element_located((By.TAG_NAME, "form")))
-            entries = form.find_elements(By.CSS_SELECTOR, "input[class=\"whsOnd zHQkBf\"], div[class=\"Y6Myld\"] > div[role=\"list\"], div[role=\"listbox\"]")
+            entries = form.find_elements(By.CSS_SELECTOR, "input[class=\"whsOnd zHQkBf\"], div[class=\"Y6Myld\"] > div[role=\"list\"], div[role=\"listbox\"], div[role=\"radiogroup\"]")
         except StaleElementReferenceException:
             continue
         if len(entries) > len(answers):
@@ -43,6 +43,10 @@ try:
                 # 選択の場合はスキップ
                 print("選択: ", answers.pop(0))
                 has_listboxes = True
+            elif entry.get_attribute("role") == "radiogroup":
+                choice = int(answers.pop(0))
+                radio_buttons = entry.find_elements(By.CSS_SELECTOR, "div[role=\"radio\"]")
+                radio_buttons[choice-1].click()
             elif entry.get_attribute("role") == "list":
                 choices = json.loads(answers.pop(0))
                 checkboxes = entry.find_elements(By.CSS_SELECTOR, "div[role=\"checkbox\"]")
@@ -60,7 +64,7 @@ try:
         except:
             print("completed successfully")
             break
-        
+
         if has_listboxes:
             input("press enter to continue")
         next.click()
