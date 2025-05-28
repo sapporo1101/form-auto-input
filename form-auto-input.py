@@ -19,7 +19,9 @@ with open("answers.txt", encoding="utf-8") as f:
     answers = f.readlines()
 answers = [answer.strip() for answer in answers]
 url = answers.pop(0)
-answers = [" ".join(answer.split(" ")[1:]) for answer in answers if answer.startswith("(")]
+answers = [
+    " ".join(answer.split(" ")[1:]) for answer in answers if answer.startswith("(")
+]
 answers.insert(0, os.getenv("ID"))
 answers.insert(1, os.getenv("NAME"))
 
@@ -29,44 +31,81 @@ try:
     driver.get(url)
 
     while True:
-        try: 
+        try:
             form = wait.until(EC.presence_of_element_located((By.TAG_NAME, "form")))
-            entries = form.find_elements(By.CSS_SELECTOR, "input[class=\"whsOnd zHQkBf\"], div[class=\"Y6Myld\"] > div[role=\"list\"], div[role=\"listbox\"], div[role=\"radiogroup\"]")
+            entries = form.find_elements(
+                By.CSS_SELECTOR,
+                'input[class="whsOnd zHQkBf"], div[class="Y6Myld"] > div[role="list"], div[role="listbox"], div[role="radiogroup"]',
+            )
         except StaleElementReferenceException:
             continue
         if len(entries) > len(answers):
             print("not enough answers")
             break
         has_listboxes = False
+        has_invalid_entry = False
         for entry in entries:
-            if entry.get_attribute("role") == "listbox":
-                # 選択の場合はスキップ
-                print("選択: ", answers.pop(0))
-                has_listboxes = True
-            elif entry.get_attribute("role") == "radiogroup":
-                choice = int(answers.pop(0))
-                radio_buttons = entry.find_elements(By.CSS_SELECTOR, "div[role=\"radio\"]")
-                radio_buttons[choice-1].click()
-            elif entry.get_attribute("role") == "list":
-                choices = json.loads(answers.pop(0))
-                checkboxes = entry.find_elements(By.CSS_SELECTOR, "div[role=\"checkbox\"]")
-                for choice in choices:
-                    checkboxes[choice-1].click()
-            elif entry.tag_name == "input":
-                element = wait.until(EC.element_to_be_clickable(entry))
-                element.send_keys(answers.pop(0))
-            else:
-                print("invalid entry")
+            is_invalid_entry = True
+            while True:
+                try:
+                    if entry.get_attribute("role") == "listbox":
+                        # 選択の場合はスキップ
+                        print("選択: ", answers.pop(0))
+                        has_listboxes = True
+                        is_invalid_entry = False
+                except StaleElementReferenceException:
+                    continue
+                try:    
+                    if entry.get_attribute("role") == "radiogroup":
+                        choice = int(answers.pop(0))
+                        radio_buttons = entry.find_elements(
+                            By.CSS_SELECTOR, 'div[role="radio"]'
+                        )
+                        radio_buttons[choice - 1].click()
+                        is_invalid_entry = False
+                except StaleElementReferenceException:
+                    continue
+                try:
+                    if entry.get_attribute("role") == "list":
+                        choices = json.loads(answers.pop(0))
+                        checkboxes = entry.find_elements(
+                            By.CSS_SELECTOR, 'div[role="checkbox"]'
+                        )
+                        for choice in choices:
+                            checkboxes[choice - 1].click()
+                        is_invalid_entry = False
+                except StaleElementReferenceException:
+                    continue
+                try:
+                    if entry.tag_name == "input":
+                        element = wait.until(EC.element_to_be_clickable(entry))
+                        element.send_keys(answers.pop(0))
+                        is_invalid_entry = False
+                except StaleElementReferenceException:
+                    continue
+                if is_invalid_entry:
+                    has_invalid_entry = True
+                break
+            if has_invalid_entry:
+                print("invalid entry found")
                 break
 
         try:
-            next = form.find_element(By.CSS_SELECTOR, "div[jsname=\"OCpkoe\"]")
-        except:
+            send = form.find_element(By.CSS_SELECTOR, 'div[jsname="M2UYVd"]')
             print("completed successfully")
             break
+        except:
+            pass
+        try:
+            next = form.find_element(By.CSS_SELECTOR, 'div[jsname="OCpkoe"]')
+        except:
+            print("no next button found")
 
         if has_listboxes:
             input("press enter to continue")
-        next.click()
+        try:
+            next.click()
+        except:
+            print("next button not clickable")
 finally:
     os.kill(driver.service.process.pid, signal.SIGTERM)
