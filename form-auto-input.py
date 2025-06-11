@@ -16,12 +16,18 @@ load_dotenv("user-profile.env")
 driver = webdriver.Chrome()
 
 with open("answers.txt", encoding="utf-8") as f:
-    answers = f.readlines()
-answers = [answer.strip() for answer in answers]
-url = answers.pop(0)
+    lines = f.readlines()
+lines = [line.strip() for line in lines]
+url = lines.pop(0)
 answers = [
-    " ".join(answer.split(" ")[1:]) for answer in answers if answer.startswith("(")
+    " ".join(answer.split(" ")[1:]) for answer in lines if answer.startswith("(")
 ]
+
+# ()なしでもanswersを取得する ("# "で始まる行は除外)
+print("answers:", answers)
+if len(answers) <= 0:
+    answers = [answer for answer in lines if answer != "" and not answer.startswith("# ")]
+
 answers.insert(0, os.getenv("ID"))
 answers.insert(1, os.getenv("NAME"))
 
@@ -68,6 +74,9 @@ try:
                 try:
                     if entry.get_attribute("role") == "list":
                         choices = json.loads(answers.pop(0))
+                        # choicesが整数の場合はリストに変換
+                        if isinstance(choices, int):
+                            choices = [choices]
                         checkboxes = entry.find_elements(
                             By.CSS_SELECTOR, 'div[role="checkbox"]'
                         )
