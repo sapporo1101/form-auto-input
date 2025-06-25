@@ -10,6 +10,7 @@ import os
 import json
 import signal
 from dotenv import load_dotenv
+import re
 
 load_dotenv("user-profile.env")
 
@@ -20,7 +21,7 @@ with open("answers.txt", encoding="utf-8") as f:
 lines = [line.strip() for line in lines]
 url = lines.pop(0)
 answers = [
-    " ".join(answer.split(" ")[1:]) for answer in lines if answer.startswith("(")
+    " ".join(answer.split(" ")[1:]) for answer in lines if re.match(r"^\(.+\) .+$", answer)
 ]
 
 # ()なしでもanswersを取得する ("# "で始まる行は除外)
@@ -41,7 +42,7 @@ try:
             form = wait.until(EC.presence_of_element_located((By.TAG_NAME, "form")))
             entries = form.find_elements(
                 By.CSS_SELECTOR,
-                'input[class="whsOnd zHQkBf"], div[class="Y6Myld"] > div[role="list"], div[role="listbox"], div[role="radiogroup"]',
+                'input[class="whsOnd zHQkBf"], textarea[class="KHxj8b tL9Q4c"], div[class="Y6Myld"] > div[role="list"], div[role="listbox"], div[role="radiogroup"]',
             )
         except StaleElementReferenceException:
             continue
@@ -86,7 +87,7 @@ try:
                 except StaleElementReferenceException:
                     continue
                 try:
-                    if entry.tag_name == "input":
+                    if entry.tag_name == "input" or entry.tag_name == "textarea":
                         element = wait.until(EC.element_to_be_clickable(entry))
                         element.send_keys(answers.pop(0))
                         is_invalid_entry = False
