@@ -46,9 +46,6 @@ try:
             )
         except StaleElementReferenceException:
             continue
-        if len(entries) > len(answers):
-            print("not enough answers")
-            break
         has_listboxes = False
         has_invalid_entry = False
         for entry in entries:
