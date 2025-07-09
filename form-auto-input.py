@@ -21,13 +21,17 @@ with open("answers.txt", encoding="utf-8") as f:
 lines = [line.strip() for line in lines]
 url = lines.pop(0)
 answers = [
-    " ".join(answer.split(" ")[1:]) for answer in lines if re.match(r"^\(.+\) .+$", answer)
+    " ".join(answer.split(" ")[1:])
+    for answer in lines
+    if re.match(r"^\(.+\) .+$", answer)
 ]
 
 # ()なしでもanswersを取得する ("# "で始まる行は除外)
 print("answers:", answers)
 if len(answers) <= 0:
-    answers = [answer for answer in lines if answer != "" and not answer.startswith("# ")]
+    answers = [
+        answer for answer in lines if answer != "" and not answer.startswith("# ")
+    ]
 
 answers.insert(0, os.getenv("ID"))
 answers.insert(1, os.getenv("NAME"))
@@ -59,12 +63,21 @@ try:
                         is_invalid_entry = False
                 except StaleElementReferenceException:
                     continue
-                try:    
+                try:
                     if entry.get_attribute("role") == "radiogroup":
-                        choice = int(answers.pop(0))
+                        choice = json.loads(answers.pop(0))
                         radio_buttons = entry.find_elements(
                             By.CSS_SELECTOR, 'div[role="radio"]'
                         )
+                        texts = [
+                            item.text
+                            for item in entry.find_elements(
+                                By.CSS_SELECTOR, 'span[dir="auto"]'
+                            )
+                        ]
+                        # choiceが文字列の場合は、choiceに一致するtextsのインデックスを取得
+                        if isinstance(choice, str):
+                            choice = texts.index(choice)
                         radio_buttons[choice - 1].click()
                         is_invalid_entry = False
                 except StaleElementReferenceException:
@@ -78,7 +91,16 @@ try:
                         checkboxes = entry.find_elements(
                             By.CSS_SELECTOR, 'div[role="checkbox"]'
                         )
+                        texts = [
+                            item.text
+                            for item in entry.find_elements(
+                                By.CSS_SELECTOR, 'span[dir="auto"]'
+                            )
+                        ]
                         for choice in choices:
+                            # choiceが文字列の場合は、choiceに一致するtextsのインデックスを取得
+                            if isinstance(choice, str):
+                                choice = texts.index(choice)
                             checkboxes[choice - 1].click()
                         is_invalid_entry = False
                 except StaleElementReferenceException:
