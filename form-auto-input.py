@@ -36,6 +36,8 @@ if len(answers) <= 0:
 answers.insert(0, os.getenv("ID"))
 answers.insert(1, os.getenv("NAME"))
 
+print("answers:", answers)
+
 wait = WebDriverWait(driver, 10)
 
 try:
@@ -78,7 +80,7 @@ try:
                         # choiceが文字列の場合は、choiceに一致するtextsのインデックスを取得
                         if isinstance(choice, str):
                             choice = texts.index(choice)
-                        radio_buttons[choice - 1].click()
+                        radio_buttons[choice].click()
                         is_invalid_entry = False
                 except StaleElementReferenceException:
                     continue
@@ -101,7 +103,7 @@ try:
                             # choiceが文字列の場合は、choiceに一致するtextsのインデックスを取得
                             if isinstance(choice, str):
                                 choice = texts.index(choice)
-                            checkboxes[choice - 1].click()
+                            checkboxes[choice].click()
                         is_invalid_entry = False
                 except StaleElementReferenceException:
                     continue
