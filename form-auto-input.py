@@ -11,6 +11,7 @@ import json
 import signal
 from dotenv import load_dotenv
 import re
+import time
 
 load_dotenv("user-profile.env")
 
@@ -46,6 +47,7 @@ try:
     while True:
         try:
             form = wait.until(EC.presence_of_element_located((By.TAG_NAME, "form")))
+            time.sleep(0.1)
             entries = form.find_elements(
                 By.CSS_SELECTOR,
                 'input[class="whsOnd zHQkBf"], textarea[class="KHxj8b tL9Q4c"], div[class="Y6Myld"] > div[role="list"], div[role="listbox"], div[role="radiogroup"]',
